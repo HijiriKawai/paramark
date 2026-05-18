@@ -1,9 +1,10 @@
-"""白レイヤ整合の確認用テスト job。"""
+"""白デカール紙向けアウトライン整合の確認用テスト job。"""
 
 from __future__ import annotations
 
 from core import LayeredGraphic
 from decals import generate_circle, generate_line, generate_ring
+from export.decal_paper import prepare_layout_for_white_decal
 from layouts import SheetPlacement, create_postcard_sheet
 
 EXPORT_NAME = "white_alignment_test"
@@ -12,6 +13,8 @@ DESCRIPTION = "白下地と色レイヤの位置合わせを確認するため�
 EXPORT_METADATA = {
     "job_kind": "test",
     "sheet_kind": "postcard",
+    "paper_mode": "white_decal",
+    "surface_color": "#68707b",
 }
 
 
@@ -39,7 +42,7 @@ def build_layout():
     )
     ring = _white_backed_ring(7.0, 5.6)
 
-    return create_postcard_sheet(
+    base_layout = create_postcard_sheet(
         (
             SheetPlacement(graphic=ring, x_mm=30.0, y_mm=35.0, anchor="center", identifier="ring_1"),
             SheetPlacement(graphic=horizontal, x_mm=30.0, y_mm=35.0, anchor="center", identifier="cross_h"),
@@ -50,4 +53,9 @@ def build_layout():
         title="White Alignment Test",
         description=DESCRIPTION,
         metadata={"job_kind": "test"},
+    )
+    return prepare_layout_for_white_decal(
+        base_layout,
+        surface_color=EXPORT_METADATA["surface_color"],
+        outline_width_mm=0.25,
     )

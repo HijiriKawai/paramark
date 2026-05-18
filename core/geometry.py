@@ -372,7 +372,7 @@ class Group(GraphicObject):
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class LayeredGraphic:
-    """白レイヤと通常色レイヤを分けて扱う。"""
+    """白として見せたい領域と通常印刷色を分けて扱う。"""
 
     white_layer: tuple["RenderableGraphic", ...] = ()
     color_layer: tuple["RenderableGraphic", ...] = ()
