@@ -170,6 +170,7 @@ def pack_graphics_on_sheet(
     sheet_size: SheetSize,
     margin_mm: float = 0.0,
     gap_mm: float = 0.0,
+    min_gap_mm: float = 1.0,
     allow_rotation: bool = False,
     title: str | None = None,
     description: str | None = None,
@@ -179,6 +180,8 @@ def pack_graphics_on_sheet(
 
     resolved_margin = _ensure_non_negative_mm("margin_mm", margin_mm)
     resolved_gap = _ensure_non_negative_mm("gap_mm", gap_mm)
+    resolved_min_gap = _ensure_non_negative_mm("min_gap_mm", min_gap_mm)
+    effective_gap = max(resolved_gap, resolved_min_gap)
     usable_width_mm = sheet_size.width_mm - (resolved_margin * 2.0)
     usable_height_mm = sheet_size.height_mm - (resolved_margin * 2.0)
     if usable_width_mm <= 0 or usable_height_mm <= 0:
@@ -203,7 +206,7 @@ def pack_graphics_on_sheet(
         packing_items,
         sheet_width_mm=usable_width_mm,
         sheet_height_mm=usable_height_mm,
-        gap_mm=resolved_gap,
+        gap_mm=effective_gap,
     )
     if packing_result.unplaced_items:
         names = ", ".join(item.identifier for item in packing_result.unplaced_items)
@@ -234,7 +237,9 @@ def pack_graphics_on_sheet(
     layout_metadata = merge_metadata(
         metadata,
         packed=True,
-        packed_gap_mm=resolved_gap,
+        packed_gap_mm=effective_gap,
+        packed_requested_gap_mm=resolved_gap,
+        packed_min_gap_mm=resolved_min_gap,
         packed_allow_rotation=allow_rotation,
         packed_fill_ratio=packing_result.fill_ratio,
         packed_used_width_mm=packing_result.used_width_mm,
