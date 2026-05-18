@@ -121,7 +121,10 @@ class GraphicObject:
         raise NotImplementedError
 
     def bounds(self) -> Bounds:
-        return self.local_bounds().transformed(self.transform)
+        base_bounds = self.local_bounds()
+        if self.style and self.style.stroke not in (None, "none") and self.style.stroke_width_mm:
+            base_bounds = base_bounds.expanded(self.style.stroke_width_mm / 2.0)
+        return base_bounds.transformed(self.transform)
 
     def with_metadata(self: Self, **extra: object) -> Self:
         return replace(self, metadata=merge_metadata(self.metadata, **extra))
@@ -306,12 +309,12 @@ class Path(GraphicObject):
         collected_bounds: list[Bounds] = []
         collected_points: list[Point] = []
         current_point: Point | None = None
-        first_point: Point | None = None
+        subpath_start: Point | None = None
 
         for command in self.commands:
             if isinstance(command, MoveTo):
                 current_point = command.point
-                first_point = first_point or command.point
+                subpath_start = command.point
                 collected_points.append(command.point)
                 continue
 
@@ -337,9 +340,9 @@ class Path(GraphicObject):
                 collected_points.append(command.end)
                 continue
 
-            if isinstance(command, ClosePath) and first_point is not None:
-                current_point = first_point
-                collected_points.append(first_point)
+            if isinstance(command, ClosePath) and subpath_start is not None:
+                current_point = subpath_start
+                collected_points.append(subpath_start)
 
         base_bounds = Bounds.from_points(tuple(collected_points))
         for extra_bounds in collected_bounds:
