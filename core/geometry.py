@@ -392,5 +392,50 @@ class LayeredGraphic:
             result = item_bounds if result is None else result.union(item_bounds)
         return result if result is not None else Bounds.zero()
 
+    def with_metadata(self, **extra: object) -> "LayeredGraphic":
+        return replace(self, metadata=merge_metadata(self.metadata, **extra))
+
+    def with_transform(self, transform: AffineTransform) -> "LayeredGraphic":
+        return LayeredGraphic(
+            white_layer=tuple(item.with_transform(transform) for item in self.white_layer),
+            color_layer=tuple(item.with_transform(transform) for item in self.color_layer),
+            metadata=dict(self.metadata),
+        )
+
+    def translated(self, x_mm: float, y_mm: float) -> "LayeredGraphic":
+        return self.with_transform(translate(x_mm, y_mm))
+
+    def scaled(
+        self,
+        x_factor: float,
+        y_factor: float | None = None,
+        *,
+        origin_x_mm: float = 0.0,
+        origin_y_mm: float = 0.0,
+    ) -> "LayeredGraphic":
+        return self.with_transform(
+            scale(
+                x_factor,
+                y_factor,
+                origin_x_mm=origin_x_mm,
+                origin_y_mm=origin_y_mm,
+            )
+        )
+
+    def rotated(
+        self,
+        angle_deg: float,
+        *,
+        origin_x_mm: float = 0.0,
+        origin_y_mm: float = 0.0,
+    ) -> "LayeredGraphic":
+        return self.with_transform(
+            rotate(
+                angle_deg,
+                origin_x_mm=origin_x_mm,
+                origin_y_mm=origin_y_mm,
+            )
+        )
+
 
 RenderableGraphic: TypeAlias = GraphicObject | Group
