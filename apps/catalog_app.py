@@ -159,21 +159,22 @@ def _edit_params_form(default_params: Mapping[str, Any], *, state_key: str) -> d
 
     for name, value in default_params.items():
         current = params.get(name, value)
+        widget_key = f"{state_key}:{name}"
         if isinstance(current, bool):
-            params[name] = _coerce_widget_value(st.checkbox(name, value=bool(current)))
+            params[name] = _coerce_widget_value(st.checkbox(name, value=bool(current), key=widget_key))
         elif isinstance(current, int) and not isinstance(current, bool):
             params[name] = _coerce_widget_value(
-                st.number_input(name, value=int(current), step=1)
+                st.number_input(name, value=int(current), step=1, key=widget_key)
             )
         elif isinstance(current, float):
             params[name] = _coerce_widget_value(
-                st.number_input(name, value=float(current), step=0.1, format="%.4f")
+                st.number_input(name, value=float(current), step=0.1, format="%.4f", key=widget_key)
             )
         elif isinstance(current, (list, tuple)):
             text_value = ",".join(str(item) for item in current)
-            params[name] = st.text_input(name, value=text_value)
+            params[name] = st.text_input(name, value=text_value, key=widget_key)
         else:
-            params[name] = st.text_input(name, value=str(current))
+            params[name] = st.text_input(name, value=str(current), key=widget_key)
 
     st.session_state[state_key] = dict(params)
     return params
@@ -257,7 +258,7 @@ def main() -> None:
             )
 
             params = _edit_params_form(template.default_params, state_key=params_state_key)
-            if st.button("Generate", type="primary"):
+            if st.button("Generate", type="primary", key=f"generate:{template.id}"):
                 DECAL_CACHE_DIR.mkdir(parents=True, exist_ok=True)
                 payload = {"template_id": template.id, "params": params, "render_mode": render_mode}
                 digest = _stable_hash(payload)
