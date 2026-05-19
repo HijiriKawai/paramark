@@ -15,6 +15,7 @@ Issue #6 の MVP 実装:
 
 from __future__ import annotations
 
+import sys
 import hashlib
 import json
 from dataclasses import dataclass
@@ -24,13 +25,20 @@ from typing import Any, Iterable, Mapping
 import streamlit as st
 import streamlit.components.v1 as components
 
+# `streamlit run apps/catalog_app.py` は実行ディレクトリが `apps/` になりやすく、
+# リポジトリルート（= core/ decals/ export/ layouts/ がある場所）が import パスに入らない。
+# このアプリはローカル開発用途のため、起動時に明示的にルートを追加する。
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
 from core import SvgDocument, merge_metadata, render_svg_document, save_svg
 from decals.templates import TEMPLATES, resolve_decal_template
 from export.export_svg import export_job_module
 from layouts import SheetPlacement, create_postcard_sheet
 
 
-ROOT_DIR = Path(__file__).resolve().parents[1]
+ROOT_DIR = REPO_ROOT
 OUTPUT_DIR = ROOT_DIR / "output"
 CATALOG_DIR = OUTPUT_DIR / "catalog_app"
 DECAL_CACHE_DIR = CATALOG_DIR / "decals"
