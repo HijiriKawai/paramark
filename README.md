@@ -168,9 +168,16 @@ layout = pack_a4_sheet(
     graphics=(line, ring),
     margin_mm=8.0,
     gap_mm=2.0,
+    min_gap_mm=1.0,
     title="packed a4",
 )
 ```
+
+`gap_mm` は「希望する隙間」、`min_gap_mm` は「最低限確保したい隙間」です。
+packing では `effective_gap_mm = max(gap_mm, min_gap_mm)` を使うため、
+たとえば `gap_mm=0.0` の指定でも `min_gap_mm` 未満には詰まりません。
+
+印刷・カット用途では、運用上の安全余白として `min_gap_mm=1.0`〜`2.0` 程度を検討してください。
 
 ### 3. SVG を出力する
 
