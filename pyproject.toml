@@ -1,0 +1,8 @@
+[project]
+name = "paramark"
+version = "0.1.0"
+description = "Python でプラモデル用デカール・ステンシル・マスキング素材を生成し、SVG/PDF出力する実験プロジェクト"
+requires-python = ">=3.11"
+dependencies = [
+    "streamlit>=1.57.0",
+]

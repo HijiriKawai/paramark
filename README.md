@@ -336,3 +336,20 @@ python3 -m export.export_pdf export.jobs.white_alignment_test
 ```
 
 生成物は既定で `output/` に保存されます。
+
+## SVG カタログアプリ（Issue #6）
+
+Streamlit ベースの簡易 UI で、次を 1 画面で扱えます。
+
+- Decals（登録テンプレ）: 選択 → パラメータ編集 → SVG 生成 → プレビュー
+- Jobs: 実行 → SVG 生成 → プレビュー
+- Outputs: `output/**/*.svg` の一覧 → プレビュー
+
+依存管理は `uv` を使います。
+
+```bash
+uv sync
+uv run streamlit run apps/catalog_app.py
+```
+
+生成/キャッシュは `output/catalog_app/` 配下へ保存されます。
