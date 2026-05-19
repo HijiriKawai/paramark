@@ -75,15 +75,35 @@ def _preview_svg(svg_text: str, *, height: int = 640) -> None:
   <head>
     <meta charset=\"utf-8\" />
     <style>
-      body {{ margin: 0; padding: 0; }}
-      svg {{ width: 100%; height: auto; }}
+            body {{ margin: 0; padding: 0; background: #ffffff; }}
+            .preview {{
+                background-color: #ffffff;
+                /* cutting-mat 風: 10mm グリッド（線幅 1mm） */
+                background-image:
+                    linear-gradient(to right, rgba(0, 0, 0, 0.08) 1mm, transparent 1mm),
+                    linear-gradient(to bottom, rgba(0, 0, 0, 0.08) 1mm, transparent 1mm);
+                background-size: 10mm 10mm;
+                background-position: 0 0;
+            }}
+            svg {{ width: 100%; height: auto; display: block; }}
     </style>
   </head>
   <body>
-    {svg_text}
+        <div class=\"preview\">{svg_text}</div>
   </body>
 </html>"""
     components.html(html, height=height, scrolling=True)
+
+
+def _is_hex_color(value: object) -> bool:
+        if not isinstance(value, str):
+                return False
+        if not value.startswith("#"):
+                return False
+        if len(value) not in (4, 7):
+                return False
+        hex_part = value[1:]
+        return all(char in "0123456789abcdefABCDEF" for char in hex_part)
 
 
 def _build_decal_document_single_canvas(
@@ -160,7 +180,28 @@ def _edit_params_form(default_params: Mapping[str, Any], *, state_key: str) -> d
     for name, value in default_params.items():
         current = params.get(name, value)
         widget_key = f"{state_key}:{name}"
-        if isinstance(current, bool):
+
+        if isinstance(current, str) and (name == "color" or name.endswith("_color")):
+            # 色は扱いやすさ優先で picker + 文字入力を用意する（picker は hex のみ）。
+            left, right = st.columns([0.55, 0.45], gap="small")
+            with left:
+                picker_key = f"{widget_key}:picker"
+                base_hex = current if _is_hex_color(current) else "#000000"
+                picked = st.color_picker(name, value=base_hex, key=picker_key)
+            with right:
+                text_key = f"{widget_key}:text"
+                typed = st.text_input(" ", value=str(current), key=text_key)
+
+            # typed が hex なら picker を優先的に同期（ユーザーの入力を尊重）。
+            resolved = typed
+            if _is_hex_color(typed):
+                resolved = typed
+            else:
+                # 非 hex の場合は picker で選んだ値を使う（typed を残したい場合は # で入力）。
+                resolved = picked
+            params[name] = resolved
+
+        elif isinstance(current, bool):
             params[name] = _coerce_widget_value(st.checkbox(name, value=bool(current), key=widget_key))
         elif isinstance(current, int) and not isinstance(current, bool):
             params[name] = _coerce_widget_value(
