@@ -20,6 +20,7 @@ import hashlib
 import json
 from dataclasses import dataclass
 from pathlib import Path
+import re
 from typing import Any, Iterable, Mapping
 
 import streamlit as st
@@ -68,26 +69,42 @@ def _read_svg(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
+def _inject_svg_grid(svg_text: str, *, grid_mm: float) -> str:
+        """SVG本文に、プレビュー用の方眼を注入する。
+
+        CSS の `mm` は物理単位として扱われ、SVGの座標(mm)と 1:1 にならない。
+        そこで、SVG内に userSpaceOnUse の pattern を差し込み、SVG座標系（=mm）で方眼を描く。
+        """
+
+        if grid_mm <= 0:
+                return svg_text
+
+        match = re.search(r"<svg\b[^>]*>", svg_text)
+        if not match:
+                return svg_text
+
+        pattern_id = f"catalog-grid-{str(grid_mm).replace('.', '_')}"
+        # 線幅は mm（SVG座標）で指定。薄く見せるため opacity を使う。
+        stroke_width_mm = 0.1
+        injected = f"""
+    <defs>
+        <pattern id="{pattern_id}" width="{grid_mm}" height="{grid_mm}" patternUnits="userSpaceOnUse">
+            <path d="M {grid_mm} 0 L 0 0 0 {grid_mm}" fill="none" stroke="#000000" stroke-opacity="0.10" stroke-width="{stroke_width_mm}" />
+        </pattern>
+    </defs>
+    <rect width="100%" height="100%" fill="#ffffff" />
+    <rect width="100%" height="100%" fill="url(#{pattern_id})" />
+"""
+
+        insert_at = match.end()
+        return svg_text[:insert_at] + injected + svg_text[insert_at:]
+
+
 def _preview_svg(svg_text: str, *, height: int = 640, grid_mm: float | None = 1.0) -> None:
         # Streamlit 側に「SVGそのもの」を渡すと表示が崩れることがあるため、HTML として埋め込む。
+        # NOTE: 方眼は CSS 背景で描くと mm が一致しないため、SVG内部へ注入して座標系を揃える。
         if grid_mm is not None and grid_mm > 0:
-                # cutting-mat 風: 任意間隔の方眼（線は視認性重視で px 指定）
-                grid_css = f"""
-            .preview {{
-                background-color: #ffffff;
-                background-image:
-                    linear-gradient(to right, rgba(0, 0, 0, 0.07) 1px, transparent 1px),
-                    linear-gradient(to bottom, rgba(0, 0, 0, 0.07) 1px, transparent 1px);
-                background-size: {grid_mm}mm {grid_mm}mm;
-                background-position: 0 0;
-            }}
-"""
-        else:
-                grid_css = """
-            .preview {
-                background-color: #ffffff;
-            }
-"""
+                svg_text = _inject_svg_grid(svg_text, grid_mm=grid_mm)
 
         html = f"""<!doctype html>
 <html>
@@ -95,12 +112,11 @@ def _preview_svg(svg_text: str, *, height: int = 640, grid_mm: float | None = 1.
         <meta charset=\"utf-8\" />
         <style>
             body {{ margin: 0; padding: 0; background: #ffffff; }}
-{grid_css}
             svg {{ width: 100%; height: auto; display: block; }}
         </style>
     </head>
     <body>
-        <div class=\"preview\">{svg_text}</div>
+        {svg_text}
     </body>
 </html>"""
         components.html(html, height=height, scrolling=True)
