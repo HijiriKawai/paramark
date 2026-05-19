@@ -14,6 +14,7 @@ class LayoutPreset:
     name: str
     margin_mm: float
     gap_mm: float
+    min_gap_mm: float = 1.0
     allow_rotation: bool = False
     description: str | None = None
     metadata: MetadataDict = field(default_factory=dict)
@@ -23,6 +24,7 @@ POSTCARD_SIMPLE = LayoutPreset(
     name="postcard_simple",
     margin_mm=5.0,
     gap_mm=2.0,
+    min_gap_mm=1.0,
     allow_rotation=False,
     description="ハガキサイズ向けの標準 preset",
     metadata={"preset_kind": "postcard"},
@@ -32,6 +34,7 @@ A4_DENSE = LayoutPreset(
     name="a4_dense",
     margin_mm=6.0,
     gap_mm=1.5,
+    min_gap_mm=1.0,
     allow_rotation=False,
     description="A4 を高密度に使う preset",
     metadata={"preset_kind": "a4"},
@@ -41,6 +44,7 @@ STENCIL_MARGIN = LayoutPreset(
     name="stencil_margin",
     margin_mm=10.0,
     gap_mm=3.0,
+    min_gap_mm=1.0,
     allow_rotation=False,
     description="ステンシル用途で余白を厚めに取る preset",
     metadata={"preset_kind": "stencil"},

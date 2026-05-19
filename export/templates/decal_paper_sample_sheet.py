@@ -179,6 +179,7 @@ def build_decal_paper_sample_base_layout(
     *,
     margin_mm: float = 3.0,
     gap_mm: float = 1.0,
+    min_gap_mm: float = 1.0,
 ) -> SheetLayout:
     """下地違いサンプルの共通レイアウトを生成する。"""
 
@@ -203,6 +204,7 @@ def build_decal_paper_sample_base_layout(
                 remaining,
                 margin_mm=margin_mm,
                 gap_mm=gap_mm,
+                min_gap_mm=min_gap_mm,
                 allow_rotation=False,
                 title="Decal Paper Sample Base",
                 description="透明デカール紙 / 白デカール紙の差を確認する共通サンプル（混在図形・高密度）",
