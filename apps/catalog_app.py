@@ -68,42 +68,53 @@ def _read_svg(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
-def _preview_svg(svg_text: str, *, height: int = 640) -> None:
-    # Streamlit 側に「SVGそのもの」を渡すと表示が崩れることがあるため、HTML として埋め込む。
-    html = f"""<!doctype html>
-<html>
-  <head>
-    <meta charset=\"utf-8\" />
-    <style>
-            body {{ margin: 0; padding: 0; background: #ffffff; }}
+def _preview_svg(svg_text: str, *, height: int = 640, grid_mm: float | None = 1.0) -> None:
+        # Streamlit 側に「SVGそのもの」を渡すと表示が崩れることがあるため、HTML として埋め込む。
+        if grid_mm is not None and grid_mm > 0:
+                # cutting-mat 風: 任意間隔の方眼（線は視認性重視で px 指定）
+                grid_css = f"""
             .preview {{
                 background-color: #ffffff;
-                /* cutting-mat 風: 10mm グリッド（線幅 1mm） */
                 background-image:
-                    linear-gradient(to right, rgba(0, 0, 0, 0.08) 1mm, transparent 1mm),
-                    linear-gradient(to bottom, rgba(0, 0, 0, 0.08) 1mm, transparent 1mm);
-                background-size: 10mm 10mm;
+                    linear-gradient(to right, rgba(0, 0, 0, 0.07) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(0, 0, 0, 0.07) 1px, transparent 1px);
+                background-size: {grid_mm}mm {grid_mm}mm;
                 background-position: 0 0;
             }}
+"""
+        else:
+                grid_css = """
+            .preview {
+                background-color: #ffffff;
+            }
+"""
+
+        html = f"""<!doctype html>
+<html>
+    <head>
+        <meta charset=\"utf-8\" />
+        <style>
+            body {{ margin: 0; padding: 0; background: #ffffff; }}
+{grid_css}
             svg {{ width: 100%; height: auto; display: block; }}
-    </style>
-  </head>
-  <body>
+        </style>
+    </head>
+    <body>
         <div class=\"preview\">{svg_text}</div>
-  </body>
+    </body>
 </html>"""
-    components.html(html, height=height, scrolling=True)
+        components.html(html, height=height, scrolling=True)
 
 
 def _is_hex_color(value: object) -> bool:
-        if not isinstance(value, str):
-                return False
-        if not value.startswith("#"):
-                return False
-        if len(value) not in (4, 7):
-                return False
-        hex_part = value[1:]
-        return all(char in "0123456789abcdefABCDEF" for char in hex_part)
+    if not isinstance(value, str):
+        return False
+    if not value.startswith("#"):
+        return False
+    if len(value) not in (4, 7):
+        return False
+    hex_part = value[1:]
+    return all(char in "0123456789abcdefABCDEF" for char in hex_part)
 
 
 def _build_decal_document_single_canvas(
@@ -353,6 +364,18 @@ def main() -> None:
 
     with center:
         st.subheader("Preview")
+        grid_choice = st.selectbox(
+            "Grid",
+            ["off", "1mm", "2mm", "5mm", "10mm"],
+            index=1,
+            key="preview:grid",
+        )
+        grid_mm: float | None
+        if grid_choice == "off":
+            grid_mm = None
+        else:
+            grid_mm = float(grid_choice.removesuffix("mm"))
+
         last = st.session_state.get("last_output_path")
         if selection["kind"] == "output" and selection.get("path") is not None:
             preview_path = selection["path"]
@@ -369,7 +392,7 @@ def main() -> None:
             except OSError as error:
                 st.error(f"SVG を読み込めません: {error}")
             else:
-                _preview_svg(svg_text)
+                _preview_svg(svg_text, grid_mm=grid_mm)
 
 
 if __name__ == "__main__":
