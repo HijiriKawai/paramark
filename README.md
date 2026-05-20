@@ -111,7 +111,8 @@ export ファイル命名規則に対応する基本図形を実装済みです�
 
 ## 動作確認環境
 
-- Python 標準ライブラリのみで動作する構成
+- 図形生成・SVG/PDF export は Python 標準ライブラリのみで動作する構成
+- ただし「SVG カタログアプリ（Issue #6）」は UI のため `streamlit` に依存（`uv` で管理）
 - 現状は `Python 3.14.5` で確認済み
 
 ## ディレクトリ構成
@@ -260,23 +261,23 @@ pdf_result = export_job_module_pdf("export.jobs.line_pack_postcard")
 CLI から実行する例:
 
 ```bash
-python3 -m export.export_svg export.jobs.line_pack_postcard
-python3 -m export.export_pdf export.jobs.line_pack_postcard
+uv run python -m export.export_svg export.jobs.line_pack_postcard
+uv run python -m export.export_pdf export.jobs.line_pack_postcard
 ```
 
 出力先を変える場合:
 
 ```bash
-python3 -m export.export_svg export.jobs.warning_dense_a4 --output-dir output/custom
-python3 -m export.export_pdf export.jobs.warning_dense_a4 --output-dir output/custom
+uv run python -m export.export_svg export.jobs.warning_dense_a4 --output-dir output/custom
+uv run python -m export.export_pdf export.jobs.warning_dense_a4 --output-dir output/custom
 ```
 
 下地違いサンプルを試す場合:
 
 ```bash
-python3 -m export.export_svg export.jobs.clear_decal_sample
-python3 -m export.export_svg export.jobs.white_decal_sample
-python3 -m export.export_pdf export.jobs.white_decal_sample
+uv run python -m export.export_svg export.jobs.clear_decal_sample
+uv run python -m export.export_svg export.jobs.white_decal_sample
+uv run python -m export.export_pdf export.jobs.white_decal_sample
 ```
 
 ## 色の扱い
@@ -329,10 +330,27 @@ print(value_100)  # 14.4
 ## まず試すなら
 
 ```bash
-python3 -m export.export_svg export.jobs.line_pack_postcard
-python3 -m export.export_svg export.jobs.clear_decal_sample
-python3 -m export.export_svg export.jobs.white_decal_sample
-python3 -m export.export_pdf export.jobs.white_alignment_test
+uv run python -m export.export_svg export.jobs.line_pack_postcard
+uv run python -m export.export_svg export.jobs.clear_decal_sample
+uv run python -m export.export_svg export.jobs.white_decal_sample
+uv run python -m export.export_pdf export.jobs.white_alignment_test
 ```
 
 生成物は既定で `output/` に保存されます。
+
+## SVG カタログアプリ（Issue #6）
+
+Streamlit ベースの簡易 UI で、次を 1 画面で扱えます。
+
+- Decals（登録テンプレ）: 選択 → パラメータ編集 → SVG 生成 → プレビュー
+- Jobs: 実行 → SVG 生成 → プレビュー
+- Outputs: `output/**/*.svg` の一覧 → プレビュー
+
+依存管理は `uv` を使います。
+
+```bash
+uv sync
+uv run streamlit run apps/catalog_app.py
+```
+
+生成/キャッシュは `output/catalog_app/` 配下へ保存されます。
