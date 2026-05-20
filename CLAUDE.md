@@ -201,10 +201,12 @@ A4_MM = (210, 297)
 
 ---
 
-# 推奨ディレクトリ構造
+# 推奨ディレクトリ構造（このリポジトリの実際の構成に合わせた説明）
 
 ```text
 project/
+├─ apps/                 # プレビュー用アプリ（README参照）
+│   └─ ...               # Webプレビュー用のファイルを置く
 ├─ decals/
 │   ├─ line.py
 │   ├─ circle.py
@@ -213,12 +215,10 @@ project/
 │   ├─ warning.py
 │   ├─ hex_grid.py
 │   └─ ...
-│
 ├─ layouts/
 │   ├─ postcard_sheet.py
 │   ├─ a4_sheet.py
 │   └─ ...
-│
 ├─ core/
 │   ├─ geometry.py
 │   ├─ packing.py
@@ -228,7 +228,6 @@ project/
 │   ├─ metadata.py
 │   ├─ units.py
 │   └─ ...
-│
 ├─ export/
 │   ├─ jobs/
 │   ├─ presets/
@@ -236,12 +235,12 @@ project/
 │   ├─ export_svg.py
 │   ├─ export_pdf.py
 │   └─ ...
-│
 ├─ examples/
 │   └─ ...
-│
 └─ output/
 ```
+
+この構成を基準に、各ディレクトリには責務ごとにファイルを分割してください。
 
 ---
 
